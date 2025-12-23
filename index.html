@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>待办事项应用</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- 移除Supabase CDN引用，改为在supabase-config.js中加载 -->
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>我的待办事项</h1>
+            <div class="stats">
+                <span>总计: <span id="total-count">0</span></span>
+                <span>待完成: <span id="active-count">0</span></span>
+                <span>已完成: <span id="completed-count">0</span></span>
+            </div>
+        </header>
+
+        <!-- 认证模态框 -->
+        <div id="auth-modal" class="modal">
+            <div class="modal-content">
+                <div class="auth-tabs">
+                    <button id="login-tab" class="tab-btn active">登录</button>
+                    <button id="signup-tab" class="tab-btn">注册</button>
+                </div>
+                
+                <form id="login-form" class="auth-form active">
+                    <div class="form-group">
+                        <label for="login-email">邮箱</label>
+                        <input type="email" id="login-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">密码</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="auth-btn">登录</button>
+                </form>
+                
+                <form id="signup-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="signup-email">邮箱</label>
+                        <input type="email" id="signup-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">密码</label>
+                        <input type="password" id="signup-password" required>
+                    </div>
+                    <button type="submit" class="auth-btn">注册</button>
+                </form>
+                
+                <div id="auth-message" class="auth-message"></div>
+            </div>
+        </div>
+
+        <!-- 用户信息区域 -->
+        <div id="user-info" class="user-info">
+            <span id="user-email"></span>
+            <button id="logout-btn" class="logout-btn">登出</button>
+        </div>
+
+        <main id="main-content">
+            <div class="input-section">
+                <form id="todo-form">
+                    <div class="form-group">
+                        <input type="text" id="todo-title" placeholder="添加新的待办事项..." required>
+                    </div>
+                    <div class="description-toggle-container">
+                        <button type="button" id="toggle-description" class="toggle-description-form-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6,9 12,15 18,9"></polyline>
+                            </svg>
+                            添加详情
+                        </button>
+                        <div id="description-container" class="description-container" style="display: none;">
+                            <textarea id="todo-description" placeholder="添加任务详情（可选）..."></textarea>
+                        </div>
+                    </div>
+                    <div class="input-options">
+                        <label for="todo-date">日期</label>
+                        <input type="date" id="todo-date">
+                        <label for="todo-time">时间</label>
+                        <input type="time" id="todo-time">
+                        <select id="todo-priority">
+                            <option value="low">低优先级</option>
+                            <option value="medium" selected>中优先级</option>
+                            <option value="high">高优先级</option>
+                        </select>
+                        <button type="submit" id="add-btn">添加</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">全部</button>
+                    <button class="filter-btn" data-filter="active">待完成</button>
+                    <button class="filter-btn" data-filter="completed">已完成</button>
+                </div>
+                <div class="filter-options">
+                    <select id="sort-select">
+                        <option value="newest">最新优先</option>
+                        <option value="oldest">最早优先</option>
+                        <option value="priority">优先级</option>
+                        <option value="due_date">截止日期</option>
+                    </select>
+                    <button id="clear-completed" class="clear-btn">清除已完成</button>
+                </div>
+            </div>
+
+            <ul id="todo-list" class="todo-list">
+                <!-- 待办事项将在这里动态生成 -->
+            </ul>
+            
+            <!-- 编辑待办事项模态框 -->
+            <div id="edit-modal" class="modal">
+                <div class="modal-content">
+                    <h2>编辑待办事项</h2>
+                    <form id="edit-form">
+                        <div class="form-group">
+                            <label for="edit-title">标题</label>
+                            <input type="text" id="edit-title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-description">详情</label>
+                            <textarea id="edit-description" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-date">日期</label>
+                            <input type="date" id="edit-date">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-time">时间</label>
+                            <input type="time" id="edit-time">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-priority">优先级</label>
+                            <select id="edit-priority">
+                                <option value="low">低优先级</option>
+                                <option value="medium">中优先级</option>
+                                <option value="high">高优先级</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="cancel-edit" class="cancel-btn">取消</button>
+                            <button type="submit" class="auth-btn">保存</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- 数据库错误提示 -->
+            <div id="db-error" class="db-error" style="display: none;">
+                <h3>数据库连接错误</h3>
+                <p>无法连接到数据库或找不到todos表。请先创建数据库表。</p>
+                <a href="create_table.html" class="button">创建数据库表</a>
+            </div>
+        </main>
+    </div>
+
+    <!-- 引入Supabase配置 -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+        // 检查Supabase是否加载成功
+        window.addEventListener('DOMContentLoaded', function() {
+            if (typeof window.supabase === 'undefined') {
+                console.error('Supabase库加载失败，尝试备用CDN');
+                // 尝试加载备用CDN
+                const script = document.createElement('script');
+                script.src = 'https://cdn.skypack.dev/@supabase/supabase-js';
+                script.onload = function() {
+                    console.log('Supabase库从备用CDN加载成功');
+                };
+                script.onerror = function() {
+                    console.error('所有CDN都无法加载Supabase库');
+                    // 显示错误消息给用户
+                    const dbError = document.getElementById('db-error');
+                    if (dbError) {
+                        dbError.style.display = 'block';
+                        const errorMsg = dbError.querySelector('p');
+                        if (errorMsg) {
+                            errorMsg.textContent = '无法加载Supabase库，请检查网络连接或稍后再试。';
+                        }
+                    }
+                };
+                document.head.appendChild(script);
+            }
+        });
+    </script>
+    <script src="supabase-config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

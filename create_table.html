@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建todos表 - Supabase</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        .button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #3367d6;
+        }
+        .button.copy {
+            background-color: #34a853;
+        }
+        .button.copy:hover {
+            background-color: #2d8e47;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .message {
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .steps {
+            counter-reset: step-counter;
+        }
+        .step {
+            margin-bottom: 20px;
+            position: relative;
+            padding-left: 40px;
+        }
+        .step:before {
+            counter-increment: step-counter;
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 30px;
+            height: 30px;
+            background-color: #4285f4;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>创建todos表 - Supabase</h1>
+        
+        <div class="section info message">
+            <strong>问题：</strong> 当前应用出现错误：<code>添加待办事项失败: {code: 23502, details: null, hint: null, message: null value in column "id" of relation "todos" violates not-null constraint}</code>
+            <br><br>
+            <strong>原因：</strong> Supabase数据库表中的id字段没有设置默认值，而应用代码在插入数据时没有提供id值。
+        </div>
+
+        <div class="section">
+            <h2>解决方案</h2>
+            <p>您需要在Supabase项目中执行以下SQL脚本来创建todos表。</p>
+        </div>
+
+        <div class="section">
+            <h2>方法1：使用Supabase仪表盘</h2>
+            <div class="steps">
+                <div class="step">
+                    <a href="https://app.supabase.com" target="_blank">登录到您的Supabase仪表盘</a>
+                </div>
+                <div class="step">选择您的项目</div>
+                <div class="step">在左侧菜单中点击 "SQL Editor"</div>
+                <div class="step">点击 "New query"</div>
+                <div class="step">复制并粘贴下面的SQL代码</div>
+                <div class="step">点击 "Run" 执行SQL脚本</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>SQL脚本</h2>
+            <div class="code-block" id="sqlCode">-- 启用uuid-ossp扩展
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 删除现有表（如果存在）
+DROP TABLE IF EXISTS public.todos CASCADE;
+
+-- 创建todos表
+CREATE TABLE public.todos (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  text TEXT NOT NULL,
+  completed BOOLEAN DEFAULT false,
+  priority INT2 DEFAULT 1,
+  due_date TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  user_id TEXT
+);
+
+-- 为表添加注释
+COMMENT ON TABLE public.todos IS '待办事项表';
+
+-- 为列添加注释
+COMMENT ON COLUMN public.todos.id IS '待办事项唯一标识';
+COMMENT ON COLUMN public.todos.text IS '待办事项内容';
+COMMENT ON COLUMN public.todos.completed IS '是否已完成';
+COMMENT ON COLUMN public.todos.priority IS '优先级：1-低,2-中,3-高';
+COMMENT ON COLUMN public.todos.due_date IS '截止日期和时间';
+COMMENT ON COLUMN public.todos.created_at IS '创建时间';
+COMMENT ON COLUMN public.todos.user_id IS '用户ID';
+
+-- 创建索引以提高查询性能
+CREATE INDEX idx_todos_user_id ON public.todos(user_id);
+CREATE INDEX idx_todos_completed ON public.todos(completed);
+CREATE INDEX idx_todos_created_at ON public.todos(created_at);
+CREATE INDEX idx_todos_due_date ON public.todos(due_date);
+
+-- 启用行级安全策略
+ALTER TABLE public.todos ENABLE ROW LEVEL SECURITY;
+
+-- 创建策略，允许用户只能访问自己的待办事项
+CREATE POLICY "Users can view own todos" ON public.todos
+  FOR SELECT USING (auth.uid()::text = user_id);
+
+CREATE POLICY "Users can insert own todos" ON public.todos
+  FOR INSERT WITH CHECK (auth.uid()::text = user_id);
+
+CREATE POLICY "Users can update own todos" ON public.todos
+  FOR UPDATE USING (auth.uid()::text = user_id);
+
+CREATE POLICY "Users can delete own todos" ON public.todos
+  FOR DELETE USING (auth.uid()::text = user_id);</div>
+            <button class="button copy" onclick="copySQL()">复制SQL代码</button>
+        </div>
+
+        <div class="section">
+            <h2>验证表是否创建成功</h2>
+            <div class="steps">
+                <div class="step">在Supabase仪表盘中，点击左侧菜单的 "Table Editor"</div>
+                <div class="step">您应该能看到 "todos" 表出现在列表中</div>
+                <div class="step">点击表名，您可以看到表的结构</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>完成后</h2>
+            <p>创建表后，刷新您的应用页面，错误应该会消失，您可以正常使用待办事项应用了。</p>
+            <a href="index.html" class="button">返回应用</a>
+        </div>
+
+        <div class="section">
+            <h2>注意事项</h2>
+            <ul>
+                <li>表已启用行级安全策略(RLS)，确保用户只能访问自己的待办事项</li>
+                <li>如果您不需要用户认证，可以暂时禁用RLS或修改策略</li>
+                <li>表结构包含所有必要的字段和索引，以支持应用的所有功能</li>
+                <li>使用了<code>due_date</code>字段而不是分开的<code>date</code>和<code>time</code>字段，以匹配应用代码中的实际使用</li>
+            </ul>
+        </div>
+
+        <div id="message" class="message" style="display: none;"></div>
+    </div>
+
+    <script>
+        function copySQL() {
+            const sqlCode = document.getElementById('sqlCode').textContent;
+            navigator.clipboard.writeText(sqlCode).then(() => {
+                showMessage('SQL代码已复制到剪贴板！', 'success');
+            }).catch(err => {
+                showMessage('复制失败，请手动选择并复制代码。', 'error');
+            });
+        }
+
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+            messageEl.style.display = 'block';
+            
+            // 5秒后自动隐藏消息
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

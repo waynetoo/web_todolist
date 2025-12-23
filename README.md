@@ -1,6 +1,8 @@
 # 待办事项应用
 
 一个功能完整、界面美观的待办事项管理应用，使用纯HTML、CSS和JavaScript构建，集成了Supabase作为后端数据库。
+<img width="985" height="794" alt="image" src="https://github.com/user-attachments/assets/b48b2f30-097a-4943-ae5c-d046c799e9a3" />
+
 
 ## 功能特性
 
